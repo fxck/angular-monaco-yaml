@@ -12,6 +12,7 @@ import {
   NgZone,
   OnDestroy,
   output,
+  signal,
   Signal,
   viewChild
 } from '@angular/core';
@@ -20,10 +21,8 @@ import { editor } from 'monaco-editor/esm/vs/editor/editor.api';
 import { CODE_FIELD_DEFAULT_OPTIONS } from './monaco.constant';
 import { MonacoEditorModel } from './monaco.model';
 import { fromEvent, Subscription } from 'rxjs';
-import { MonacoService } from './monaco.service';
 import { configureMonacoYaml } from 'monaco-yaml';
-
-declare let monaco: any;
+import loader from '@monaco-editor/loader';
 
 @Component({
   selector: 'app-monaco',
@@ -54,7 +53,6 @@ export class MonacoComponent implements ControlValueAccessor, OnDestroy {
 
   // # Deps
   #zone = inject(NgZone);
-  #monacoService = inject(MonacoService);
 
   // # Data
   value = input<string>();
@@ -62,6 +60,8 @@ export class MonacoComponent implements ControlValueAccessor, OnDestroy {
   editorOptions = input<Partial<editor.IStandaloneEditorConstructionOptions>>({});
   editorContainerRef = viewChild<ElementRef<HTMLElement>>('editorContainerRef');
   editorInit = output<editor.IStandaloneCodeEditor>();
+  #monacoLoaded = signal(false);
+  #monacoInstance: any;
   #value = '';
   #editorInstance!: editor.IStandaloneCodeEditor;
   #editorOptions: Signal<editor.IStandaloneEditorConstructionOptions | undefined> = computed(() => {
@@ -80,42 +80,42 @@ export class MonacoComponent implements ControlValueAccessor, OnDestroy {
       if (this.editorContainerRef()
         && (this.#editorOptions() || this.editorModel())
       ) {
-        this.#monacoService.load({
-          onMonacoLoad: () => {
+        loader.init().then((monaco) => {
+          this.#monacoInstance = monaco;
 
-            window.MonacoEnvironment = {
-              getWorker(_, label) {
-                switch (label) {
-                  case 'editorWorkerService':
-                    return new Worker(new URL('/assets/monaco/monaco-editor/esm/vs/editor/editor.worker', import.meta.url));
-                  case 'json':
-                    return new Worker(new URL('/assets/monaco/monaco-editor/esm/vs/language/json/json.worker', import.meta.url));
-                  case 'yaml':
-                    return new Worker(new URL('monaco-yaml/yaml.worker', import.meta.url));
-                  default:
-                    throw new Error(`Unknown label ${label}`);
-                }
+          window.MonacoEnvironment = {
+            getWorker(_, label) {
+              switch (label) {
+                case 'editorWorkerService':
+                  return new Worker(new URL('/assets/monaco/monaco-editor/esm/vs/editor/editor.worker', import.meta.url));
+                case 'json':
+                  return new Worker(new URL('/assets/monaco/monaco-editor/esm/vs/language/json/json.worker', import.meta.url));
+                case 'yaml':
+                  return new Worker(new URL('monaco-yaml/yaml.worker', import.meta.url));
+                default:
+                  throw new Error(`Unknown label ${label}`);
               }
-            };
+            }
+          };
 
-            configureMonacoYaml(monaco, {
-              enableSchemaRequest: true,
-              hover: true,
-              completion: true,
-              validate: true,
-              format: true,
-              schemas: [
-                {
-                  uri: 'https://api.app-prg1.zerops.io/api/rest/public/settings/zerops-yml-json-schema.json',
-                  fileMatch: [ '**/zerops.yml' ]
-                }
-              ]
-            });
+          configureMonacoYaml(this.#monacoInstance, {
+            enableSchemaRequest: true,
+            hover: true,
+            completion: true,
+            validate: true,
+            format: true,
+            schemas: [
+              {
+                uri: 'https://api.app-prg1.zerops.io/api/rest/public/settings/zerops-yml-json-schema.json',
+                fileMatch: [ '**/zerops.yml' ]
+              }
+            ]
+          });
 
-          }
+          this.#monacoLoaded.set(true);
         });
 
-        if (this.#monacoService.loaded()) {
+        if (this.#monacoLoaded()) {
           this.#initMonaco();
         }
       }
@@ -157,6 +157,8 @@ export class MonacoComponent implements ControlValueAccessor, OnDestroy {
 
   #initMonaco() {
 
+    const monaco = this.#monacoInstance;
+
     if (this.#editorInstance) {
       this.#editorInstance.dispose();
     }
@@ -193,7 +195,6 @@ export class MonacoComponent implements ControlValueAccessor, OnDestroy {
     });
 
     if (!editorModel) {
-      console.log('set value no model', this.#value || '');
       this.#editorInstance.setValue(this.#value || '');
     }
 
