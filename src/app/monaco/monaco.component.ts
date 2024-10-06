@@ -193,7 +193,6 @@ export class MonacoComponent implements ControlValueAccessor, OnDestroy {
     });
 
     if (!editorModel) {
-      console.log('set value no model', this.#value || '');
       this.#editorInstance.setValue(this.#value || '');
     }
 
