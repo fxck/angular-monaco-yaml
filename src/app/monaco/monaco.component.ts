@@ -23,6 +23,9 @@ import { MonacoEditorModel } from './monaco.model';
 import { fromEvent, Subscription } from 'rxjs';
 import { configureMonacoYaml } from 'monaco-yaml';
 import loader from '@monaco-editor/loader';
+import * as monaco from 'monaco-editor';
+
+loader.config({ monaco });
 
 @Component({
   selector: 'app-monaco',
