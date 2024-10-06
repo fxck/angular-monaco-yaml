@@ -9,6 +9,7 @@ export default (config: webpack.Configuration) => {
   };
 
   // Modify the output configuration for yaml.worker.js
+  // to keep the name not hashed
   const originalFilename = config.output!.filename;
   config.output!.filename = (pathData: webpack.PathData) => {
     if (pathData.chunk?.name === 'yaml.worker') {
