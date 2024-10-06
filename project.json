@@ -8,9 +8,12 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@nx/angular:webpack-browser",
       "outputs": ["{options.outputPath}"],
       "options": {
+        "customWebpackConfig": {
+          "path": "./src/webpack.config.ts"
+        },
         "outputPath": "dist/app",
         "index": "./src/index.html",
         "main": "./src/main.ts",
@@ -21,6 +24,16 @@
           {
             "glob": "**/*",
             "input": "public"
+          },
+          {
+            "glob": "**/*",
+            "input": "node_modules/monaco-editor",
+            "output": "/public/monaco/"
+          },
+          {
+            "glob": "**/*",
+            "input": "node_modules/monaco-yaml",
+            "output": "/monaco-yaml/"
           }
         ],
         "styles": ["./src/styles.scss"],

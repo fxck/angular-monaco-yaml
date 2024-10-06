@@ -1,1 +1,22 @@
-/* You can add global styles to this file, and also import other style files */
+@import 'normalize.css/normalize';
+
+html {
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100%;
+  height: 100%;
+}
+
+* {
+  &,
+  &:before,
+  &:after {
+    box-sizing: inherit;
+  }
+
+  outline: none;
+}
