@@ -29,11 +29,6 @@
             "glob": "**/*",
             "input": "node_modules/monaco-editor",
             "output": "/public/monaco/"
-          },
-          {
-            "glob": "**/*",
-            "input": "node_modules/monaco-yaml",
-            "output": "/monaco-yaml/"
           }
         ],
         "styles": ["./src/styles.scss"],
@@ -67,7 +62,7 @@
       "defaultConfiguration": "production"
     },
     "serve": {
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "executor": "@nx/angular:dev-server",
       "configurations": {
         "production": {
           "buildTarget": "app:build:production"
